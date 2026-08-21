@@ -1,22 +1,54 @@
 # RediLite 🚀
 > **An Embedded, Single-File SQLite-like Key-Value & Data Structure Engine with Redis API**
 
+[![PyPI Version](https.img.shields.io/pypi/v/redilite.svg)](https://pypi.org/project/redilite/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/redilite.svg)](https://pypi.org/project/redilite/)
+[![CI Status](https://github.com/vbanurag/redilite/actions/workflows/ci.yml/badge.svg)](https://github.com/vbanurag/redilite/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 RediLite brings the simplicity of **SQLite** (zero server configuration, single-file `.redilite` storage, embedded in-process library) together with the power and dynamic APIs of **Redis** (Strings, Hashes, Lists, Sets, Sorted Sets, Key Expiration, Pub/Sub, and Transactions).
 
 It also includes a built-in **RESP Protocol TCP Server** (so standard tools like `redis-cli`, `redis-py`, `go-redis`, `ioredis`, or `jedis` can connect seamlessly), an **Interactive CLI REPL**, and a full [Command Manual (redilite/COMMANDS.md)](redilite/COMMANDS.md).
 
 ---
 
+## 💻 Installation
+
+### 1. Standard PyPI Installation
+Install via `pip`:
+```bash
+pip install redilite
+```
+
+Install via `uv` (Astral package manager):
+```bash
+uv add redilite
+# or via uv pip:
+uv pip install redilite
+```
+
+### 2. Install Directly from GitHub
+```bash
+pip install git+https://github.com/vbanurag/redilite.git
+```
+
+### 3. Local Development Installation
+Clone the repository and install in editable mode:
+```bash
+git clone https://github.com/vbanurag/redilite.git
+cd redilite
+uv pip install --system -e .
+```
+
+---
+
 ## ⚡ 100% Compatible with UV (Astral Package Manager)
 
-RediLite supports **`uv`**, Astral's fast Python package & project manager:
+RediLite fully supports **`uv`**:
 
 ```bash
 # Build wheels with UV
 uv build
-
-# Install system-wide via UV
-uv pip install --system -e .
 
 # Run interactive RediLite shell via UV
 uv run redilite cli mydb.redilite
@@ -24,233 +56,117 @@ uv run redilite cli mydb.redilite
 
 ---
 
-## 📦 How `import redilite` Works (Package & Library Setup)
+## 📦 Usage Modes
 
 RediLite can be used in 3 ways depending on your project requirements:
 
-### Option 1: Install as a Python Library (`uv` or `pip`)
-Run inside the project directory:
-```bash
-uv pip install --system -e .
-# or standard pip:
-pip install -e .
-```
-This registers `redilite` into your Python environment. Now **any Python script anywhere on your machine** can simply call:
+### Option 1: Native Embedded Python Library (SQLite Style)
+
 ```python
 import redilite
 
+# Connect directly to a single-file database (or ':memory:')
 db = redilite.connect("mydb.redilite")
+
+# --- String Operations ---
+db.set("user:name", "Alice", ex=60)  # Expire in 60s
+print(db.get("user:name"))           # "Alice"
+
+# Pythonic Dict Syntax
+db["counter"] = 100
+print(db["counter"])                 # "100"
+
+# --- Hash Operations ---
+db.hset("profile:1", "age", 30)
+db.hset("profile:1", "role", "Engineer")
+print(db.hgetall("profile:1"))       # {'age': '30', 'role': 'Engineer'}
+
+# --- List Operations ---
+db.rpush("queue", "job1", "job2", "job3")
+print(db.lpop("queue"))              # "job1"
+print(db.lrange("queue", 0, -1))     # ['job2', 'job3']
+
+# --- Set Operations ---
+db.sadd("skills", "python", "sqlite", "redis")
+print(db.smembers("skills"))         # {'python', 'sqlite', 'redis'}
+
+# --- Sorted Sets (ZSets) ---
+db.zadd("scores", {"player1": 150, "player2": 220})
+print(db.zrevrange("scores", 0, -1, withscores=True))  # ['player2', 220.0, 'player1', 150.0]
+
+# Always close when done (or use context manager)
+db.close()
 ```
 
 ### Option 2: Embedded Local Folder (Zero Installation)
-Simply copy the `redilite/` directory into your project folder. Because `redilite/` contains an `__init__.py`, Python will import it directly:
+Simply copy the `redilite/` directory into your project codebase:
 ```
 my_project/
-├── redilite/           <-- Copy directory here
+├── redilite/           <-- Copy package folder here
 │   ├── __init__.py
 │   ├── core.py
 │   └── storage.py
 └── app.py              <-- Write: import redilite
 ```
 
-### Option 3: Remote TCP Server (For Java, Go, Node.js, or Microservices)
-Run the server process:
+### Option 3: Remote RESP TCP Server (For Java, Go, Node.js, or Microservices)
+Start the TCP server process:
 ```bash
 python3 -m redilite.cli server --port 6379 --db mydb.redilite
 ```
-Now clients in **Node.js, Go, Java, or Python** connect via standard Redis drivers over TCP port `6379`.
-
----
-
-## 🏗️ Software Design Patterns Architecture
-
-RediLite is built using standard object-oriented software design patterns:
-
-1. **Repository Pattern (`BaseStorageRepository`, `StorageEngine`)**
-   - Decouples persistence technology (SQLite WAL engine) from domain business logic.
-2. **Strategy Pattern (`SQLiteStringStrategy`, `SQLiteHashStrategy`, etc.)**
-   - Encapsulates storage strategy implementations per Redis data structure type (`string`, `hash`, `list`, `set`, `zset`).
-3. **Command Pattern (`ICommand`, `CommandRegistry`, `SetCommand`, `GetCommand`, etc.)**
-   - Encapsulates Redis commands as executable objects, allowing command dispatching, parameter validation, and transaction queuing (`MULTI`/`EXEC`).
-4. **Observer Pattern (`IObserver`, `PubSubManager`)**
-   - Event bus providing Pub/Sub message dispatching to subscribed observers.
-5. **Factory Pattern (`DatabaseFactory`)**
-   - Standard factory method for instantiating database instances (`redilite.connect("mydb.redilite")`).
-
----
-
-## ✨ Features & Operations
-
-- 📦 **Embedded & Zero-Config (SQLite-style)**: Use it as a lightweight Python module without setting up databases or servers.
-- 💾 **Single-File Persistence**: Stores data reliably in a single `.redilite` database file backed by SQLite WAL mode (or run entirely `:memory:`).
-- ⚡ **Redis-Compatible API**:
-  - **Strings**: `SET`, `GET`, `GETSET`, `INCR`, `DECR`, `MSET`, `MGET`, `APPEND`, `STRLEN`
-  - **Hashes**: `HSET`, `HGET`, `HDEL`, `HEXISTS`, `HGETALL`, `HKEYS`, `HVALS`, `HLEN`, `HINCRBY`
-  - **Lists**: `LPUSH`, `RPUSH`, `LPOP`, `RPOP`, `LRANGE`, `LLEN`, `LINDEX`
-  - **Sets**: `SADD`, `SREM`, `SMEMBERS`, `SISMEMBER`, `SCARD`, `SUNION`, `SINTER`, `SDIFF`
-  - **Sorted Sets (ZSets)**: `ZADD`, `ZREM`, `ZRANGE`, `ZREVRANGE`, `ZSCORE`, `ZCARD`
-  - **Key & TTL Expiration**: `DEL`, `EXISTS`, `EXPIRE`, `TTL`, `PERSIST`, `KEYS`, `FLUSHDB`
-  - **Transactions**: `MULTI`, `EXEC`, `DISCARD`
-  - **Pub/Sub**: In-memory event bus across subscribers.
-- 🌐 **RESP Protocol TCP Server**: Connect using standard client drivers in Python, Java, Go, and Node.js.
-- 💻 **Interactive CLI**: Dedicated SQLite/Redis-style terminal interface.
+Now clients in **Node.js, Go, Java, or Python** connect over TCP port `6379`.
 
 ---
 
 ## 🔌 Connecting to RediLite (Multi-Language Examples)
 
----
-
-### 🐍 1. Python Sample Code
-
-#### Option A: Native Embedded Mode
-
-```python
-import redilite
-
-# Connect directly to single-file database
-db = redilite.connect("mydb.redilite")
-
-db.set("user:100", "Alice")
-print(db.get("user:100"))  # "Alice"
-
-db.hset("session", "token", "abc12345")
-print(db.hgetall("session"))  # {'token': 'abc12345'}
-
-db.close()
-```
-
-#### Option B: Over TCP using `redis-py` Driver
-
+### 🐍 Python (`redis-py`)
 ```python
 import redis
-
-# Connect to RediLite RESP Server running on port 6379
 r = redis.Redis(host='localhost', port=6379, decode_responses=True)
-
 r.set('msg', 'Hello RediLite from Python!')
-print(r.get('msg'))  # "Hello RediLite from Python!"
-
-r.hset('user:200', 'name', 'Bob')
-print(r.hgetall('user:200'))
+print(r.get('msg'))
 ```
 
----
-
-### 💚 2. Node.js / JavaScript Sample Code
-
-#### Using `ioredis` or `redis` npm packages:
-
+### 💚 Node.js / JavaScript (`ioredis`)
 ```javascript
 const Redis = require('ioredis');
-
-// Connect to RediLite RESP Server
-const redis = new Redis({
-  host: '127.0.0.1',
-  port: 6379,
-});
-
-async function run() {
-  await redis.set('app:status', 'online');
-  const status = await redis.get('app:status');
-  console.log('Status:', status); // "online"
-
-  await redis.hset('player:1', 'score', 500, 'level', 3);
-  const player = await redis.hgetall('player:1');
-  console.log('Player Profile:', player);
-
-  redis.disconnect();
-}
-
-run();
+const redis = new Redis({ host: '127.0.0.1', port: 6379 });
+await redis.set('app:status', 'online');
+console.log(await redis.get('app:status'));
 ```
 
----
-
-### 🐹 3. Go (Golang) Sample Code
-
-#### Using `github.com/redis/go-redis/v9`:
-
+### 🐹 Go (`go-redis`)
 ```go
-package main
+rdb := redis.NewClient(&redis.Options{ Addr: "localhost:6379" })
+rdb.Set(ctx, "greeting", "Hello from Go!", 0)
+```
 
-import (
-	"context"
-	"fmt"
-	"github.com/redis/go-redis/v9"
-)
-
-func main() {
-	ctx := context.Background()
-
-	// Connect to RediLite RESP Server
-	rdb := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-	})
-
-	// Set & Get String
-	err := rdb.Set(ctx, "greeting", "Hello RediLite from Go!", 0).Err()
-	if err != nil {
-		panic(err)
-	}
-
-	val, err := rdb.Get(ctx, "greeting").Result()
-	if err != nil {
-		panic(err)
-	}
-	fmt.Println("Greeting:", val)
-
-	// Hash Operations
-	rdb.HSet(ctx, "user:300", "name", "Charlie", "role", "Admin")
-	user, _ := rdb.HGetAll(ctx, "user:300").Result()
-	fmt.Println("User:", user)
+### ☕ Java (`Jedis`)
+```java
+try (Jedis jedis = new Jedis("localhost", 6379)) {
+    jedis.set("server:name", "RediLite Engine");
 }
 ```
 
 ---
 
-### ☕ 4. Java Sample Code
+## 🏗️ Software Design Patterns Architecture
 
-#### Using Jedis (`redis.clients.jedis.Jedis`):
-
-```java
-import redis.clients.jedis.Jedis;
-import java.util.Map;
-
-public class RediLiteExample {
-    public static void main(String[] args) {
-        // Connect to RediLite RESP Server
-        try (Jedis jedis = new Jedis("localhost", 6379)) {
-            
-            // Ping test
-            System.out.println("Response: " + jedis.ping()); // PONG
-            
-            // Set & Get
-            jedis.set("server:name", "RediLite Core Engine");
-            System.out.println("Server Name: " + jedis.get("server:name"));
-            
-            // Hash Operations
-            jedis.hset("customer:1", "name", "David");
-            jedis.hset("customer:1", "email", "david@example.com");
-            
-            Map<String, String> customer = jedis.hgetAll("customer:1");
-            System.out.println("Customer Details: " + customer);
-        }
-    }
-}
-```
+1. **Repository Pattern (`BaseStorageRepository`, `StorageEngine`)**: Decouples persistence from domain logic.
+2. **Strategy Pattern (`SQLiteStringStrategy`, `SQLiteHashStrategy`, etc.)**: Modular storage handlers per data type.
+3. **Command Pattern (`ICommand`, `CommandRegistry`)**: Encapsulated Redis commands and transaction queueing.
+4. **Observer Pattern (`IObserver`, `PubSubManager`)**: Event bus for Pub/Sub messaging.
+5. **Factory Pattern (`DatabaseFactory`)**: Factory method for instantiating database connections (`redilite.connect()`).
 
 ---
 
 ## ⚡ Performance Benchmarks
 
-Run the benchmark suite:
-
+Run benchmark suite:
 ```bash
 python3 benchmark.py --iterations 1000 --disk
 ```
-
-### Benchmark Metrics Summary:
 
 | Operation | In-Memory (`:memory:`) | Disk WAL (`.redilite`) | Avg Latency |
 | :--- | :--- | :--- | :--- |
@@ -268,12 +184,10 @@ python3 benchmark.py --iterations 1000 --disk
 ## 🖥️ Interactive CLI REPL
 
 Run RediLite interactive terminal shell:
-
 ```bash
-python3 -m redilite.cli mydb.redilite
+redilite cli mydb.redilite
 ```
 
-**Inside the CLI:**
 ```
 redilite [mydb.redilite]> SET greeting "Hello RediLite"
 "OK"
@@ -281,11 +195,6 @@ redilite [mydb.redilite]> GET greeting
 "Hello RediLite"
 redilite [mydb.redilite]> HSET user:100 name "Bob" email "bob@example.com"
 (integer) 2
-redilite [mydb.redilite]> HGETALL user:100
-1) "name"
-2) "Bob"
-3) "email"
-4) "bob@example.com"
 ```
 
 ---
