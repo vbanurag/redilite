@@ -2,7 +2,7 @@
 > **An Embedded, Single-File SQLite-like Key-Value & Data Structure Engine with Redis API**
 
 [![PyPI Version](https://img.shields.io/pypi/v/redilite.svg)](https://pypi.org/project/redilite/)
-[![Python Versions](https://img.shields.io/pypi/pyversions/redilite.svg)](https://pypi.org/project/redilite/)
+[![Python Versions](https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-blue.svg)](https://pypi.org/project/redilite/)
 [![CI Status](https://github.com/vbanurag/redilite/actions/workflows/ci.yml/badge.svg)](https://github.com/vbanurag/redilite/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
