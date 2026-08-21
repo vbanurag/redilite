@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "redilite"
 version = "1.0.0"
 description = "Embedded SQLite-like Key-Value and Data Structure Engine with Redis API, RESP TCP Server, and CLI"
-readme = "redilite/README.md"
+readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT" }
 
