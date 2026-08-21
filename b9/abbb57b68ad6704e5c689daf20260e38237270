@@ -1,0 +1,32 @@
+redilite/server.py
+  s_feab59a26c0df2::t_a63b838c20c40d 1-107
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.6.3",
+  "base_commit_sha": "b9abbb57b68ad6704e5c689daf20260e38237270",
+  "prompts": {
+    "260f6033ae151eb1": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "ea08e28b-ba03-4f89-a163-180f1dac867b",
+        "model": "qwen3.5"
+      },
+      "human_author": "anurag sharma <you@example.com>",
+      "total_additions": 1075,
+      "total_deletions": 51,
+      "accepted_lines": 1024,
+      "overriden_lines": 0
+    }
+  },
+  "sessions": {
+    "s_feab59a26c0df2": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "f4641ac3-613e-4ffb-bdc2-753b9d9479c6",
+        "model": "claude-opus-5"
+      },
+      "human_author": "anurag sharma <you@example.com>"
+    }
+  }
+}
