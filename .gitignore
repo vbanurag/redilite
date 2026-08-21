@@ -1,0 +1,10 @@
+.history/
+__pycache__/
+*.pyc
+*.egg-info/
+build/
+dist/
+*.litedis
+*.redilite
+.aider*
+.claude/
