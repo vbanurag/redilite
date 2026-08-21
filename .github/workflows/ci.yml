@@ -1,0 +1,44 @@
+name: RediLite CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test:
+    name: Run Unit Tests & Security Audit (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install package in editable mode
+        run: uv pip install --system -e .
+
+      - name: Run Unit & Concurrency Test Suite
+        run: python -m unittest discover -s redilite/tests -p "test_*.py"
+
+      - name: Run Bandit Security Vulnerability Audit
+        run: |
+          uv pip install --system bandit
+          bandit -r redilite
+
+      - name: Run Performance Benchmark Suite
+        run: python benchmark.py --iterations 500 --disk
+
+      - name: Verify Package Build with UV
+        run: uv build
